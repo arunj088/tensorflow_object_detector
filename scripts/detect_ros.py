@@ -28,7 +28,7 @@ from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 
 # SET FRACTION OF GPU YOU WANT TO USE HERE
-GPU_FRACTION = 0.4
+GPU_FRACTION = 0.6
 
 ######### Set model here ############
 MODEL_NAME =  'ssd_mobilenet_v1_coco_11_06_2017'
