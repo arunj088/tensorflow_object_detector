@@ -23,19 +23,19 @@ class ImageProcess:
         self.pub = rospy.Publisher('/proc_image', Image, queue_size=1)
         self.lane_pub = rospy.Publisher('/lane_loc',Lanepoints, queue_size=10)
         self.Bridge = CvBridge()
-        self.C_PATH = '/home/aj/Curved-Lane-Lines/calibrationdata_logitech/head_camera.yaml'  # yaml file created by ros node
-        with open(self.C_PATH, 'r') as stream:
-            data = yaml.safe_load(stream)
-            mtx = data['camera_matrix']
-            dist = data['distortion_coefficients']
-            (rows, cols, data) = (mtx['rows'], mtx['cols'], mtx['data'])
-            mtx = np.array(data, dtype=float).reshape(rows, cols)
-            (rows, cols, data) = (dist['rows'], dist['cols'], dist['data'])
-            dist = np.array(data, dtype=float).reshape(rows, cols)
-            self.newcameramtx, self.roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (640, 480), 1, (640, 480))
-        self.mono = monocular.Monocular(np.array([[860.463418, 0.000000, 311.608199],
-                                 [0.000000, 869.417896, 287.737199],
-                                 [0.000000, 0.000000, 1.000000]]).T, 1.2, 7.2, 0.6, 0, np.array([0.0, 0.0], dtype=np.float))
+        # self.C_PATH = '/home/aj/Curved-Lane-Lines/calibrationdata_logitech/head_camera.yaml'  # yaml file created by ros node
+        # with open(self.C_PATH, 'r') as stream:
+        #     data = yaml.safe_load(stream)
+        #     mtx = data['camera_matrix']
+        #     dist = data['distortion_coefficients']
+        #     (rows, cols, data) = (mtx['rows'], mtx['cols'], mtx['data'])
+        #     mtx = np.array(data, dtype=float).reshape(rows, cols)
+        #     (rows, cols, data) = (dist['rows'], dist['cols'], dist['data'])
+        #     dist = np.array(data, dtype=float).reshape(rows, cols)
+        #     self.newcameramtx, self.roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (640, 480), 1, (640, 480))
+        # self.mono = monocular.Monocular(np.array([[860.463418, 0.000000, 311.608199],
+        #                          [0.000000, 869.417896, 287.737199],
+        #                          [0.000000, 0.000000, 1.000000]]).T, 1.2, 7.2, 0.6, 0, np.array([0.0, 0.0], dtype=np.float))
 
     def h_transform(self,u,v,H):
         tx = (H[0,0]*u + H[0,1]*v + H[0,2])
