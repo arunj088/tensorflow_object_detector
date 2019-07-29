@@ -1,0 +1,37 @@
+<launch>
+
+  <arg name="camera_name" default="camera" />
+  <arg name="camera_serial" default="17593137" />
+  <arg name="calibrated" default="1" />
+
+    <node pkg= "tensorflow_object_detector" name="detect_ros" type="detect_ros.py"  output="screen"> 
+    <remap from="image" to="/camera/image_rect_color/compressed"/>
+    </node>
+
+  <group ns="$(arg camera_name)">
+    <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager" args="manager" />
+
+    <node pkg="nodelet" type="nodelet" name="camera_nodelet"
+          args="load pointgrey_camera_driver/PointGreyCameraNodelet camera_nodelet_manager" >
+      <param name="frame_id" value="camera" />
+      <param name="serial" value="$(arg camera_serial)" />
+      <param name="frame_rate" value="30" />
+      <!-- When unspecified, the driver will use the default framerate as given by the
+           camera itself. Use this parameter to override that value for cameras capable of
+           other framerates. -->
+      <!-- Use the camera_calibration package to create this file -->
+      <param name="camera_info_url" 
+             value="file://$(env HOME)/.ros/camera_info/17593137.yaml" />
+    </node>
+
+    <node pkg="nodelet" type="nodelet" name="image_proc_debayer"
+          args="load image_proc/debayer camera_nodelet_manager">
+    </node>
+  </group>
+
+  <node pkg="image_proc" type="image_proc" name="image_proc" ns="camera" />
+ 
+    <node pkg="image_view" type="image_view" name="image_view">
+    <remap from="image" to="debug_image"/>
+    </node>
+</launch>
