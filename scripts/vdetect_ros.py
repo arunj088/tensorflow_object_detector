@@ -33,15 +33,15 @@ from object_detection.utils import visualization_utils as vis_util
 GPU_FRACTION = 0.7
 
 ######### Set model here ############
-# MODEL_NAME = 'faster_rcnn_resnet101_kitti_2018_01_28'
-MODEL_NAME = 'ssd_mobilenet_v2_coco_2018_03_29'
+MODEL_NAME = 'faster_rcnn_resnet101_kitti_2018_01_28'
+# MODEL_NAME = 'ssd_mobilenet_v2_coco_2018_03_29'
 # By default models are stored in data/models/
 MODEL_PATH = os.path.join(os.path.dirname(sys.path[0]),'data','models' , MODEL_NAME)
 # Path to frozen detection graph. This is the actual model that is used for the object detection.
 PATH_TO_CKPT = MODEL_PATH + '/frozen_inference_graph.pb'
 ######### Set the label map file here ###########
-# LABEL_NAME = 'labelmap.pbtxt'
-LABEL_NAME = 'mscoco_label_map.pbtxt'
+LABEL_NAME = 'labelmap.pbtxt'
+# LABEL_NAME = 'mscoco_label_map.pbtxt'
 # By default label maps are stored in data/labels/
 PATH_TO_LABELS = os.path.join(os.path.dirname(sys.path[0]),'data','labels', LABEL_NAME)
 ######### Set the number of classes here #########
@@ -90,7 +90,7 @@ class Detector:
         # monocular class can be modified to make the matrix transposed
         self.m = mono.Monocular(np.array([[860.463418, 0.000000, 311.608199],
                                          [0.000000, 869.417896, 287.737199],
-                                         [0.000000, 0.000000, 1.000000]]).T, 1.2, 3.55, 0.0, 0.0, np.array([0.0, 0.0]))
+                                         [0.000000, 0.000000, 1.000000]]).T, 1.06-0.78, 3.5, 0.0, 0.0, np.array([0.0, 0.0]))
 
     # def draw_lines(self, img, edges, color=[0, 0, 255], thickness=3):
     #
@@ -203,8 +203,8 @@ class Detector:
         # the array based representation of the image will be used later in order to prepare the
         # result image with boxes and labels on it.
         # ROI
-        ypixel_offset_l = image.shape[0]//2-50
-        ypixel_offset_u = image.shape[0] - 200
+        ypixel_offset_l = image.shape[0]//2+50
+        ypixel_offset_u = image.shape[0] + 200
         roi_image = image[ypixel_offset_l:ypixel_offset_u,:,:]
         image_np = np.asarray(roi_image)
         image_np_real = np.asarray(image)
@@ -219,7 +219,8 @@ class Detector:
         classes = detection_graph.get_tensor_by_name('detection_classes:0')
         num_detections = detection_graph.get_tensor_by_name('num_detections:0')
         min_score = 0.2
-        category_id = 3  # 3 for mobilnet/ 1 for kitte
+        # category_id = 3  # 3 for mobilnet/ 1 for kitte
+        category_id = 1
 
         (boxes, scores, classes, num_detections) = self.sess.run([boxes, scores, classes, num_detections],
             feed_dict={image_tensor: image_np_expanded})
@@ -272,11 +273,19 @@ class Detector:
                         (x_mid[i], y_mid[i]), font, 0.5, (255, 255, 255), 1, cv2.LINE_AA)
         cv2.putText(image, "fps=%.2f" % fps,
                     (0, ht - 20), font, 1, (255, 255, 255), 2, cv2.LINE_AA)
+        homography = self.m.tformToImage()
+        horizon = [int(homography[0, 0] / homography[0, 2]), int(homography[0, 1] / homography[0, 2])]
+        cv2.line(image, (0, horizon[1]), (wdt, horizon[1]), (255, 255, 255),
+                 1)  # horizon line ######################
+        cv2.line(image, (horizon[0], 0), (horizon[0], ht), (255, 255, 255),
+                 1)  # horizon line ######################
+        cv2.line(image, (0, ht//2), (wdt, ht//2), (0, 0, 0),
+                 1)
         if len(objects):
             msg = Lanepoints()
             msg.rows = image_loc.shape[0]
             msg.cols = image_loc.shape[1]
-            msg.loc = image_loc.reshape((-1))
+            msg.loc = xy_range.reshape((-1))
             #############################################
             self.loc_pub.publish(msg)
         self.object_pub.publish(objArray)
@@ -309,7 +318,7 @@ class Detector:
         image_out.header = data.header
         self.image_pub.publish(image_out)
         # self.map_pub.publish(map_out)
-        cv2.imshow("output_image",image)
+        cv2.imshow("output_image",cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
         cv2.waitKey(3)
 
     def filter_boxes(self, min_score, boxes, scores, classes, categories):

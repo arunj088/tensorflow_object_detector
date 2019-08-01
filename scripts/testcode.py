@@ -21,7 +21,7 @@ class ImageProcess:
     def __init__(self):
         rospy.Subscriber('/usb_cam/image_raw/compressed', CompressedImage, self.image_proc, queue_size=1)
         self.pub = rospy.Publisher('/proc_image', Image, queue_size=1)
-        self.lane_pub = rospy.Publisher('/lane_loc',Lanepoints, queue_size=10)
+        self.lane_pub = rospy.Publisher('/lane_loc',Lanepoints, queue_size=1)
         self.Bridge = CvBridge()
         self.C_PATH = '/home/aj/Curved-Lane-Lines/calibrationdata_logitech/head_camera.yaml'  # yaml file created by ros node
         with open(self.C_PATH, 'r') as stream:
@@ -35,7 +35,9 @@ class ImageProcess:
             self.newcameramtx, self.roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (640, 480), 1, (640, 480))
         self.mono = monocular.Monocular(np.array([[860.463418, 0.000000, 311.608199],
                                  [0.000000, 869.417896, 287.737199],
-                                 [0.000000, 0.000000, 1.000000]]).T, 1.2, 7.2, 0.6, 0, np.array([0.0, 0.0], dtype=np.float))
+                                 [0.000000, 0.000000, 1.000000]]).T, 1.06-0.78, 3.5, 0.0, 0, np.array([0.0, 0.0], dtype=np.float))
+        self.mat = mtx
+        self.udist = dist
 
     def h_transform(self,u,v,H):
         tx = (H[0,0]*u + H[0,1]*v + H[0,2])
@@ -65,7 +67,7 @@ class ImageProcess:
             print(e)
         # cv_img = cv2.imread('/home/aj/Curved-Lane-Lines/test_images/prescan2.jpg')
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-        # cv_img = cv2.undistort(cv_img, mtx, dist, None, mtx)
+        cv_img = cv2.undistort(cv_img, self.mat, self.udist, None, self.mat)
         hls = cv2.cvtColor(cv_img, cv2.COLOR_RGB2HLS)
         gray = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
         r_channel = cv_img[:,:,0]
@@ -83,15 +85,15 @@ class ImageProcess:
         # l_channel[()]
 
         s_channel[(s_channel <= 45)] = 0
-        s_channel[:s_channel.shape[0]//2+5,:] = 3
+        s_channel[:s_channel.shape[0]//2,:] = 3
 
         l_channel[(l_channel <= 40) | (l_channel >= 55)] = 0
-        l_channel[:l_channel.shape[0] // 2+25 , :] = 0
-        canny = cv2.Canny(r_channel, 30, 95)
-        canny[:canny.shape[0]//2,:] = 0
+        l_channel[:l_channel.shape[0] // 2+15 , :] = 0
+        # canny = cv2.Canny(r_channel, 30, 95)
+        # canny[:canny.shape[0]//2,:] = 0
 
 
-        # cv2.imshow('canny',canny)
+        # cv2.imshow('s_channel',s_channel)
         # cv2.waitKey(0)
         # h_channel[(h_channel != 0)] = 1
         height, width = cv_img.shape[0], cv_img.shape[1]
@@ -103,28 +105,28 @@ class ImageProcess:
         # test = gray*s_binary
         test1d = np.multiply(gray, s_binary)
         new_binary = np.zeros_like(test)
-        new_binary[(test > 160)] = 255
+        new_binary[(test > 189)] = 255
         # cv2.imshow('s_channel', s_channel)
         # cv2.imshow('l_channel', new_binary)
         # cv2.imshow('s_channel', cv_img)
-        # cv2.waitKey(3)
+        # cv2.waitKey(0)
         # warping
-        src = np.float32([(0.4281*width, 0.442*height), (0.5703*width,0.442*height),
-                          (0.0109* width,0.7916* height), (0.942*width,0.7916*height)])
-        dst = np.float32([(0.4281*width, 0.442*height), (0.5703*width,0.442*height),
-                          (0.4281* width,0.7916* height), (0.5703*width,0.7916*height)])
+        src = np.float32([(0.4156*width, 0.5916*height), (0.5843*width,0.5916*height),
+                          (0.1359* width,0.9042* height), (0.9031*width,0.9042*height)])
+        dst = np.float32([(0.4156*width, 0.5916*height), (0.5843*width,0.5916*height),
+                          (0.4156* width,0.9042* height), (0.5843*width,0.9042*height)])
         mat = cv2.getPerspectiveTransform(src, dst)
         inv_mat = cv2.getPerspectiveTransform(dst,src)
         warped_img = cv2.warpPerspective(cv_img,mat, (cv_img.shape[1], cv_img.shape[0]))
         warped_mask = cv2.warpPerspective(new_binary ,mat, (cv_img.shape[1], cv_img.shape[0]))
-        warped_canny = cv2.warpPerspective(canny ,mat, (cv_img.shape[1], cv_img.shape[0]))
+        # warped_canny = cv2.warpPerspective(canny ,mat, (cv_img.shape[1], cv_img.shape[0]))
         hist = np.sum(warped_mask[:,:,1][:warped_mask.shape[0],],axis=0)
-        # cv2.imshow('warped_mask', warped_canny)
+        # cv2.imshow('warped_mask', warped_mask)
         # cv2.waitKey(0)
         # plt.plot(hist)
         # plt.show()
         midpoint = int(hist.shape[0]/2)
-        left_x_base = midpoint//3 + np.argmax(hist[midpoint//3:midpoint])
+        left_x_base = midpoint//2 + 10 + np.argmax(hist[midpoint//2+10:midpoint])
         right_x_base = np.argmax(hist[midpoint:]) + midpoint
         #sliding window & curve fitting
         left_a, left_b, left_c = [],[],[]
@@ -273,7 +275,7 @@ class ImageProcess:
         (row, col) = (image_lane_loc.shape[0], image_lane_loc.shape[1])
         # plt.plot(image_lane_loc[:,0], 480-image_lane_loc[:,1], image_lane_loc[:,2],480-image_lane_loc[:,3])
         # plt.show()
-        # plt.plot(image_pts[:,1], image_pts[:,0], image_pts[:,3], image_pts[:,2])
+        # plt.plot(image_pts[:,1]*4.375, image_pts[:,0], image_pts[:,3]*4.375, image_pts[:,2])  # 4.375 is the scale factor to match lane width of 3.5
         # plt.xlim((5,-5))
         # plt.show()
         ros_msg = image_lane_loc.reshape(-1)
