@@ -83,14 +83,14 @@ class Detector:
         self.object_pub = rospy.Publisher("objects", Detection2DArray, queue_size=1)
         self.loc_pub = rospy.Publisher("vehicle_loc",Lanepoints, queue_size=1)
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/usb_cam/image_raw", Image,
+        self.image_sub = rospy.Subscriber("/usb_cam/image_raw/compressed", CompressedImage,
                                           self.image_cb, queue_size=1, buff_size=2**24)
         self.sess = tf.Session(graph=detection_graph,config=config)
         # intrinsic matrix is transposed as monocular class expects a transposed matrix
         # monocular class can be modified to make the matrix transposed
-        self.m = mono.Monocular(np.array([[860.463418, 0.000000, 311.608199],
-                                         [0.000000, 869.417896, 287.737199],
-                                         [0.000000, 0.000000, 1.000000]]).T, 1.06-0.78, 3.5, 0.0, 0.0, np.array([0.0, 0.0]))
+        self.m = mono.Monocular(np.array([[181.601122, 0.000000, 314.057170],
+                                         [0.000000, 240.594314, 229.090602],
+                                         [0.000000, 0.000000, 1.000000]]).T, 1.06, 0.0, 0.0, 0.0, np.array([0.0, 0.0]))
 
     # def draw_lines(self, img, edges, color=[0, 0, 255], thickness=3):
     #
@@ -195,7 +195,7 @@ class Detector:
         objArray = Detection2DArray()
         time_i = time.time()
         try:
-            cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
+            cv_image = self.bridge.compressed_imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
         image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2RGB)

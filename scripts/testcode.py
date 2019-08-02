@@ -33,9 +33,9 @@ class ImageProcess:
             (rows, cols, data) = (dist['rows'], dist['cols'], dist['data'])
             dist = np.array(data, dtype=float).reshape(rows, cols)
             self.newcameramtx, self.roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (640, 480), 1, (640, 480))
-        self.mono = monocular.Monocular(np.array([[860.463418, 0.000000, 311.608199],
-                                 [0.000000, 869.417896, 287.737199],
-                                 [0.000000, 0.000000, 1.000000]]).T, 1.06-0.78, 3.5, 0.0, 0, np.array([0.0, 0.0], dtype=np.float))
+        self.mono = monocular.Monocular(np.array([[181.601122, 0.000000, 314.057170],
+                                         [0.000000, 240.594314, 229.090602],
+                                         [0.000000, 0.000000, 1.000000]]).T, 1.06, 0.0, 0.0, 0.0, np.array([0.0, 0.0], dtype=np.float))
         self.mat = mtx
         self.udist = dist
 
@@ -275,9 +275,9 @@ class ImageProcess:
         (row, col) = (image_lane_loc.shape[0], image_lane_loc.shape[1])
         # plt.plot(image_lane_loc[:,0], 480-image_lane_loc[:,1], image_lane_loc[:,2],480-image_lane_loc[:,3])
         # plt.show()
-        # plt.plot(image_pts[:,1]*4.375, image_pts[:,0], image_pts[:,3]*4.375, image_pts[:,2])  # 4.375 is the scale factor to match lane width of 3.5
-        # plt.xlim((5,-5))
-        # plt.show()
+        plt.plot(image_pts[:,1], image_pts[:,0], image_pts[:,3], image_pts[:,2])  # 4.375 is the scale factor to match lane width of 3.5
+        plt.xlim((5,-5))
+        plt.show()
         ros_msg = image_lane_loc.reshape(-1)
         msg = Lanepoints()
         msg.rows = int(row)
