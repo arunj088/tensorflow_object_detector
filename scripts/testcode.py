@@ -109,7 +109,6 @@ class ImageProcess:
         # cv2.imshow('s_channel', s_channel)
         # cv2.waitKey(0)
         # warping
-        # (ul,ur,ll, lr) = (self.mono.vehicleTo
         src = np.float32([(0.4156*width, 0.5916*height), (0.5843*width,0.5916*height),
                           (0.1359* width,0.9042* height), (0.9031*width,0.9042*height)])
         dst = np.float32([(0.4156*width, 0.5916*height), (0.5843*width,0.5916*height),

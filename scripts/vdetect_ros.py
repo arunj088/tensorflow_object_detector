@@ -101,7 +101,7 @@ class Detector:
         # intrinsic matrix is transposed as monocular class expects a transposed matrix
         # monocular class can be modified to make the matrix transposed
         self.m = mono.Monocular(self.cam_mtx.T,
-                                0.0762, 2.0, 0.0, 0.0, np.array([0.0, 0.0]))
+                                1.2, 12.0, 12.0, 0.0, np.array([0.0, 0.0]))
 
     # def draw_lines(self, img, edges, color=[0, 0, 255], thickness=3):
     #
@@ -291,6 +291,8 @@ class Detector:
                  1)  # horizon line ######################
         cv2.line(image, (horizon[0], 0), (horizon[0], ht), (255, 255, 255),
                  1)  # horizon line ######################
+        cv2.line(image, (0, ht),(horizon[0], horizon[1]), (255, 255, 255))
+        cv2.line(image, (wdt, ht), (horizon[0], horizon[1]), (255, 255, 255))
         cv2.line(image, (0, ht//2), (wdt, ht//2), (0, 0, 0),
                  1)
         if len(objects):
