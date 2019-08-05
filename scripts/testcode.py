@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import monocular as monocular
 import cv2
-import rospy
+import rospy, rosparam
 from barc.msg import Lanepoints
 
 from sensor_msgs.msg import CompressedImage, Image
@@ -19,25 +19,23 @@ from cv_bridge import CvBridgeError, CvBridge
 
 class ImageProcess:
     def __init__(self):
-        rospy.Subscriber('/usb_cam/image_raw/compressed', CompressedImage, self.image_proc, queue_size=1)
+        rospy.Subscriber('/usb_cam/image_raw/compressed', CompressedImage, self.image_proc, queue_size=1, buff_size=2**24)
         self.pub = rospy.Publisher('/proc_image', Image, queue_size=1)
         self.lane_pub = rospy.Publisher('/lane_loc',Lanepoints, queue_size=1)
         self.Bridge = CvBridge()
-        self.C_PATH = '/home/aj/Curved-Lane-Lines/calibrationdata_logitech/head_camera.yaml'  # yaml file created by ros node
-        with open(self.C_PATH, 'r') as stream:
-            data = yaml.safe_load(stream)
-            mtx = data['camera_matrix']
-            dist = data['distortion_coefficients']
-            (rows, cols, data) = (mtx['rows'], mtx['cols'], mtx['data'])
-            mtx = np.array(data, dtype=float).reshape(rows, cols)
-            (rows, cols, data) = (dist['rows'], dist['cols'], dist['data'])
-            dist = np.array(data, dtype=float).reshape(rows, cols)
-            self.newcameramtx, self.roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (640, 480), 1, (640, 480))
-        self.mono = monocular.Monocular(np.array([[181.601122, 0.000000, 314.057170],
-                                         [0.000000, 240.594314, 229.090602],
-                                         [0.000000, 0.000000, 1.000000]]).T, 1.06, 0.0, 0.0, 0.0, np.array([0.0, 0.0], dtype=np.float))
-        self.mat = mtx
-        self.udist = dist
+        # camera parameters
+        # rosparam.load_file('/home/aj/Desktop/barc_calibrationdata/ost.yaml')
+        self.cam_mtx = rosparam.get_param('camera_matrix/data')
+        self.cam_rows = rosparam.get_param('camera_matrix/rows')
+        self.cam_cols = rosparam.get_param('camera_matrix/cols')
+        self.cam_mtx = np.array(np.array(self.cam_mtx).reshape(self.cam_rows, self.cam_cols))
+        self.dst_mtx = rosparam.get_param('distortion_coefficients/data')
+        (self.dst_rows, self.dst_cols) = (rosparam.get_param('distortion_coefficients/rows'),
+                                          rosparam.get_param('distortion_coefficients/cols'))
+        self.dst_mtx = np.array(np.array(self.dst_mtx).reshape(self.dst_rows, self.dst_cols))
+        # ~camera paramters
+        self.mono = monocular.Monocular(self.cam_mtx.T,
+                                0.0762, 2.0, 0.0, 0.0, np.array([0.0, 0.0]))
 
     def h_transform(self,u,v,H):
         tx = (H[0,0]*u + H[0,1]*v + H[0,2])
@@ -67,7 +65,7 @@ class ImageProcess:
             print(e)
         # cv_img = cv2.imread('/home/aj/Curved-Lane-Lines/test_images/prescan2.jpg')
         cv_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2RGB)
-        cv_img = cv2.undistort(cv_img, self.mat, self.udist, None, self.mat)
+        cv_img = cv2.undistort(cv_img, self.cam_mtx, self.dst_mtx, None)
         hls = cv2.cvtColor(cv_img, cv2.COLOR_RGB2HLS)
         gray = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
         r_channel = cv_img[:,:,0]
@@ -108,9 +106,10 @@ class ImageProcess:
         new_binary[(test > 189)] = 255
         # cv2.imshow('s_channel', s_channel)
         # cv2.imshow('l_channel', new_binary)
-        # cv2.imshow('s_channel', cv_img)
+        # cv2.imshow('s_channel', s_channel)
         # cv2.waitKey(0)
         # warping
+        # (ul,ur,ll, lr) = (self.mono.vehicleTo
         src = np.float32([(0.4156*width, 0.5916*height), (0.5843*width,0.5916*height),
                           (0.1359* width,0.9042* height), (0.9031*width,0.9042*height)])
         dst = np.float32([(0.4156*width, 0.5916*height), (0.5843*width,0.5916*height),
@@ -275,9 +274,9 @@ class ImageProcess:
         (row, col) = (image_lane_loc.shape[0], image_lane_loc.shape[1])
         # plt.plot(image_lane_loc[:,0], 480-image_lane_loc[:,1], image_lane_loc[:,2],480-image_lane_loc[:,3])
         # plt.show()
-        plt.plot(image_pts[:,1], image_pts[:,0], image_pts[:,3], image_pts[:,2])  # 4.375 is the scale factor to match lane width of 3.5
-        plt.xlim((5,-5))
-        plt.show()
+        # plt.plot(image_pts[:,1], image_pts[:,0], image_pts[:,3], image_pts[:,2])  # 4.375 is the scale factor to match lane width of 3.5
+        # plt.xlim((5,-5))
+        # plt.show()
         ros_msg = image_lane_loc.reshape(-1)
         msg = Lanepoints()
         msg.rows = int(row)

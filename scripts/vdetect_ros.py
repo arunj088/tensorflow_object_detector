@@ -10,6 +10,7 @@ import time
 import matplotlib.pyplot as plt
 # ROS related imports
 import rospy
+import rosparam
 from barc.msg import Lanepoints
 from sensor_msgs.msg import CompressedImage, Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -83,14 +84,24 @@ class Detector:
         self.object_pub = rospy.Publisher("objects", Detection2DArray, queue_size=1)
         self.loc_pub = rospy.Publisher("vehicle_loc",Lanepoints, queue_size=1)
         self.bridge = CvBridge()
+        # camera parameters
+        # rosparam.load_file('/home/aj/Desktop/barc_calibrationdata/ost.yaml')
+        self.cam_mtx = rosparam.get_param('camera_matrix/data')
+        self.cam_rows = rosparam.get_param('camera_matrix/rows')
+        self.cam_cols = rosparam.get_param('camera_matrix/cols')
+        self.cam_mtx = np.array(np.array(self.cam_mtx).reshape(self.cam_rows, self.cam_cols))
+        self.dst_mtx = rosparam.get_param('distortion_coefficients/data')
+        (self.dst_rows, self.dst_cols) = (rosparam.get_param('distortion_coefficients/rows'),
+                                          rosparam.get_param('distortion_coefficients/cols'))
+        self.dst_mtx = np.array(np.array(self.dst_mtx).reshape(self.dst_rows, self.dst_cols))
+        # ~camera paramters
         self.image_sub = rospy.Subscriber("/usb_cam/image_raw/compressed", CompressedImage,
                                           self.image_cb, queue_size=1, buff_size=2**24)
         self.sess = tf.Session(graph=detection_graph,config=config)
         # intrinsic matrix is transposed as monocular class expects a transposed matrix
         # monocular class can be modified to make the matrix transposed
-        self.m = mono.Monocular(np.array([[181.601122, 0.000000, 314.057170],
-                                         [0.000000, 240.594314, 229.090602],
-                                         [0.000000, 0.000000, 1.000000]]).T, 1.06, 0.0, 0.0, 0.0, np.array([0.0, 0.0]))
+        self.m = mono.Monocular(self.cam_mtx.T,
+                                0.0762, 2.0, 0.0, 0.0, np.array([0.0, 0.0]))
 
     # def draw_lines(self, img, edges, color=[0, 0, 255], thickness=3):
     #
@@ -196,6 +207,7 @@ class Detector:
         time_i = time.time()
         try:
             cv_image = self.bridge.compressed_imgmsg_to_cv2(data, "bgr8")
+            cv_image = cv2.undistort(cv_image, self.cam_mtx, self.dst_mtx)
         except CvBridgeError as e:
             print(e)
         image = cv2.cvtColor(cv_image,cv2.COLOR_BGR2RGB)
