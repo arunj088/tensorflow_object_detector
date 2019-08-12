@@ -10,7 +10,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import monocular as monocular
 import cv2
-import rospy, rosparam
+import rospy
+import rosparam
 from barc.msg import Lanepoints
 
 from sensor_msgs.msg import CompressedImage, Image
@@ -57,7 +58,7 @@ class ImageProcess:
         #     dist = np.array(data, dtype=float).reshape(rows, cols)
         #     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (640, 480), 1, (640, 480))
         # mono = monocular.Monocular(newcameramtx.T,1.2,3.2,0,0,np.array([0.0, -0.02], dtype=np.float))
-        t0 = time.time()
+        # t0 = time.time()
         try:
             cv_img = self.Bridge.compressed_imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
@@ -103,11 +104,20 @@ class ImageProcess:
         # test = gray*s_binary
         test1d = np.multiply(gray, s_binary)
         new_binary = np.zeros_like(test)
-        new_binary[(test > 179)] = 255
+        new_binary[(test > 182)] = 255
         # cv2.imshow('s_channel', s_channel)
         # cv2.imshow('l_channel', new_binary)
         # cv2.imshow('s_channel', s_channel)
         # cv2.waitKey(0)
+        # slope1 = float(height-horizon[1])/float(38-horizon[0])
+        # slope2 = float(height-horizon[1])/float(width-horizon[0])
+        # x1 = width+(int((height-150)/slope1))
+        # x2 = int((height-150)/slope2)
+        # src = np.float32([(x1, height-150), (x2, height-150),
+        #                   (230, height), (width, height)])
+        # dst = np.float32([(x1, height-150), (x2, height-150),
+        #                   (x1, height), (x2, height)])
+
         # warping
         src = np.float32([(0.4156*width, 0.5916*height), (0.5843*width,0.5916*height),
                           (0.1359* width,0.9042* height), (0.9031*width,0.9042*height)])
@@ -281,9 +291,9 @@ class ImageProcess:
         msg.cols = int(col)
         msg.loc = ros_msg
         self.lane_pub.publish(msg)
-        tf = time.time()
-        fps = 1/(tf-t0)
-        print(fps)
+        # tf = time.time()
+        # fps = 1/(tf-t0)
+        # print(fps)
         # plt.plot(image_lane_loc[:, 0], height - image_lane_loc[:, 1], image_lane_loc[:, 2], height - image_lane_loc[:, 3])
         # plt.xlim((5, -5))
         # plt.show()
