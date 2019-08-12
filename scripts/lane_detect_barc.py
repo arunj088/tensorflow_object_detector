@@ -20,7 +20,7 @@ from cv_bridge import CvBridgeError, CvBridge
 
 class ImageProcess:
     def __init__(self):
-        rospy.Subscriber('/usb_cam/image_raw/compressed', CompressedImage, self.image_proc, queue_size=1, buff_size=2**24)
+        rospy.Subscriber('/barc_cam/image_raw/compressed', CompressedImage, self.image_proc, queue_size=1, buff_size=2**24)
         self.pub = rospy.Publisher('/proc_image', Image, queue_size=1)
         self.lane_pub = rospy.Publisher('/lane_loc',Lanepoints, queue_size=1)
         self.Bridge = CvBridge()
