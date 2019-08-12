@@ -34,8 +34,7 @@ class ImageProcess:
                                           rosparam.get_param('distortion_coefficients/cols'))
         self.dst_mtx = np.array(np.array(self.dst_mtx).reshape(self.dst_rows, self.dst_cols))
         # ~camera paramters
-        self.mono = monocular.Monocular(self.cam_mtx.T,
-                                0.0762, 2.0, 0.0, 0.0, np.array([0.0, 0.0]))
+        self.mono = monocular.Monocular(self.cam_mtx.T, 1.06, 0.0, 0.0, 0.0, np.array([0.0, 0.0]))
 
     def h_transform(self,u,v,H):
         tx = (H[0,0]*u + H[0,1]*v + H[0,2])
@@ -74,7 +73,8 @@ class ImageProcess:
         l_channel = hls[:,:,1]
         s_channel = hls[:,:,2]
         h_channel = hls[:,:,0]
-
+        homography = self.mono.tformToImage()
+        horizon = [int(homography[0, 0] / homography[0, 2]), int(homography[0, 1] / homography[0, 2])]
         # cv2.imshow('l_channel', l_channel)
         # cv2.imshow('s_channel', s_channel)
         # cv2.imshow('h_channel', h_channel)
@@ -103,7 +103,7 @@ class ImageProcess:
         # test = gray*s_binary
         test1d = np.multiply(gray, s_binary)
         new_binary = np.zeros_like(test)
-        new_binary[(test > 189)] = 255
+        new_binary[(test > 179)] = 255
         # cv2.imshow('s_channel', s_channel)
         # cv2.imshow('l_channel', new_binary)
         # cv2.imshow('s_channel', s_channel)
@@ -115,6 +115,7 @@ class ImageProcess:
                           (0.4156* width,0.9042* height), (0.5843*width,0.9042*height)])
         mat = cv2.getPerspectiveTransform(src, dst)
         inv_mat = cv2.getPerspectiveTransform(dst,src)
+        limit = self.h_transform(horizon[0],horizon[1],mat)
         warped_img = cv2.warpPerspective(cv_img,mat, (cv_img.shape[1], cv_img.shape[0]))
         warped_mask = cv2.warpPerspective(new_binary ,mat, (cv_img.shape[1], cv_img.shape[0]))
         # warped_canny = cv2.warpPerspective(canny ,mat, (cv_img.shape[1], cv_img.shape[0]))
@@ -233,8 +234,6 @@ class ImageProcess:
         img_plane_midpoint = np.array([img_plane_midpoint[0]/img_plane_midpoint[2], img_plane_midpoint[1]/img_plane_midpoint[2]],dtype=int)
         offset = cv_img.shape[1]//2 - img_plane_midpoint[0]
         index_y_ref = height - 40
-        homography = self.mono.tformToImage()
-        horizon = [int(homography[0,0]/homography[0,2]), int(homography[0,1]/homography[0,2])]
         cv2.rectangle(inv_p_wrap, (400,100), (640,0), (255,255,255), thickness = -1, lineType = 8, shift = 0)
         fontFace = cv2.FONT_HERSHEY_SIMPLEX
         cv2.putText(inv_p_wrap, "information box", (465, 20), fontFace, .5,(0,0,0))
@@ -273,10 +272,10 @@ class ImageProcess:
         (row, col) = (image_lane_loc.shape[0], image_lane_loc.shape[1])
         # plt.plot(image_lane_loc[:,0], 480-image_lane_loc[:,1], image_lane_loc[:,2],480-image_lane_loc[:,3])
         # plt.show()
-        # plt.plot(image_pts[:,1], image_pts[:,0], image_pts[:,3], image_pts[:,2])  # 4.375 is the scale factor to match lane width of 3.5
+        # plt.plot(image_pts[:,1], image_pts[:,0], image_pts[:,3], image_pts[:,2])
         # plt.xlim((5,-5))
         # plt.show()
-        ros_msg = image_lane_loc.reshape(-1)
+        ros_msg = image_pts.reshape(-1)
         msg = Lanepoints()
         msg.rows = int(row)
         msg.cols = int(col)
