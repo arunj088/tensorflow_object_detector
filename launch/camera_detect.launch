@@ -1,0 +1,5 @@
+<launch>
+	<rosparam command="load" file="$(find tensorflow_object_detector)/launch/barc_cam.yaml" />
+    <node pkg= "tensorflow_object_detector" name="vdetect_ros" type="vdetect_barc.py"  />
+    <node pkg= "tensorflow_object_detector" name="lane_detect_ros" type="lane_detect_barc.py" />
+</launch>

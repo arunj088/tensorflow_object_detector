@@ -95,7 +95,7 @@ class Detector:
                                           rosparam.get_param('distortion_coefficients/cols'))
         self.dst_mtx = np.array(np.array(self.dst_mtx).reshape(self.dst_rows, self.dst_cols))
         # ~camera paramters
-        self.image_sub = rospy.Subscriber("/usb_cam/image_raw/compressed", CompressedImage,
+        self.image_sub = rospy.Subscriber("/barc_cam/image_raw/compressed", CompressedImage,
                                           self.image_cb, queue_size=1, buff_size=2**24)
         self.sess = tf.Session(graph=detection_graph,config=config)
         # intrinsic matrix is transposed as monocular class expects a transposed matrix
