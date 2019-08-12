@@ -302,9 +302,9 @@ class Detector:
             msg.loc = xy_range.reshape((-1))
             #############################################
         else:
-            msg.rows = 0
-            msg.cols = 0
-            msg.loc = 0
+            msg.rows = 1
+            msg.cols = 2
+            msg.loc = [-1,-1]
         self.loc_pub.publish(msg)
         self.object_pub.publish(objArray)
 

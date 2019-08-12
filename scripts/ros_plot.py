@@ -21,7 +21,8 @@ def animate(xy_loc, fig, ax):
     # circle3 = plt.Circle((0, 0), 13, color='r', clip_on=True, fill = False)
     ax.clear()
     # ax.scatter(xy_loc[:, 1], xy_loc[:, 0], s=30, c=np.array([[1,0,0]]))
-    ax.add_patch(patches.Rectangle(((vehicle_pos[0,1]+(vehicle_pos[0,1]//2)),vehicle_pos[0,0]),2.0,2.0, fill=True, alpha =2))
+    if not vehicle_pos[0,0] < 0:
+        ax.add_patch(patches.Rectangle(((vehicle_pos[0,1]+(vehicle_pos[0,1]//2)),vehicle_pos[0,0]),2.0,2.0, fill=True, alpha =2))
     # ax.plot(vehicle_pos[:,1],vehicle_pos[:,0], 'bo')
     if 0 < vehicle_pos[0,0] <= 7.5:
         car_length = 2.0
