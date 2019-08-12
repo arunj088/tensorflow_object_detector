@@ -4,6 +4,7 @@ from math import sin, cos, radians
 import numpy as np
 from sensor_msgs.msg import LaserScan
 import matplotlib.pyplot as plt
+import matplotlib.patches as patches
 from barc.msg import Lanepoints
 import monocular as mono
 
@@ -20,11 +21,21 @@ def animate(xy_loc, fig, ax):
     # circle3 = plt.Circle((0, 0), 13, color='r', clip_on=True, fill = False)
     ax.clear()
     # ax.scatter(xy_loc[:, 1], xy_loc[:, 0], s=30, c=np.array([[1,0,0]]))
-    ax.plot(vehicle_pos[:,1],vehicle_pos[:,0], 'bo')
-    ax.plot(lane_loc[:,1], lane_loc[:,0], lane_loc[:,3], lane_loc[:,2])
+    ax.add_patch(patches.Rectangle(((vehicle_pos[0,1]+(vehicle_pos[0,1]//2)),vehicle_pos[0,0]),2.0,2.0, fill=True, alpha =2))
+    # ax.plot(vehicle_pos[:,1],vehicle_pos[:,0], 'bo')
+    if 0 < vehicle_pos[0,0] <= 7.5:
+        car_length = 2.0
+        for i in range(len(lane_loc)):
+            if (lane_loc[i,0]>=vehicle_pos[0,0]-car_length) and (lane_loc[i,0] <= (vehicle_pos[0,0] + car_length*2)):
+                lane_loc[i,1] = lane_loc[i,1]+3.5 # left lane
+            if (lane_loc[i,0]>=vehicle_pos[0,0]) and ((lane_loc[i,0]) <= (vehicle_pos[0,0] + car_length)):
+                lane_loc[i,3] = lane_loc[i,3] + 3.5 # right lane
+        ax.plot(lane_loc[:, 1], lane_loc[:, 0], lane_loc[:, 3], lane_loc[:, 2])
+    else:
+        ax.plot(lane_loc[:,1], lane_loc[:,0], lane_loc[:,3], lane_loc[:,2])
     # ax.add_artist(circle3)
     # ax.plot([0,-1],[0,5])
-    ax.set_xlim((5, -5))
+    ax.set_xlim((7, -7))
     # ax.set_ylim((0, 80))
 
 

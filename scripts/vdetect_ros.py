@@ -295,13 +295,17 @@ class Detector:
         cv2.line(image, (wdt, ht), (horizon[0], horizon[1]), (255, 255, 255))
         cv2.line(image, (0, ht//2), (wdt, ht//2), (0, 0, 0),
                  1)
+        msg = Lanepoints()
         if len(objects):
-            msg = Lanepoints()
             msg.rows = image_loc.shape[0]
             msg.cols = image_loc.shape[1]
             msg.loc = xy_range.reshape((-1))
             #############################################
-            self.loc_pub.publish(msg)
+        else:
+            msg.rows = 0
+            msg.cols = 0
+            msg.loc = 0
+        self.loc_pub.publish(msg)
         self.object_pub.publish(objArray)
 
         img=cv2.cvtColor(image_np, cv2.COLOR_BGR2RGB)
