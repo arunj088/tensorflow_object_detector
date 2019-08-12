@@ -1,8 +1,12 @@
 <launch>
 	<rosparam command="load" file="$(find tensorflow_object_detector)/launch/prescan.yaml" />
-    <node pkg="usb_cam" name="usb_cam" type="usb_cam_node" >
+    <node name="usb_cam" pkg="usb_cam" type="usb_cam_node" output="screen" >
         <param name="video_device" value="/dev/video1" />
+        <param name="image_width" value="640" />
+        <param name="image_height" value="480" />
         <param name="pixel_format" value="yuyv" />
+        <param name="camera_frame_id" value="usb_cam" />
+        <param name="io_method" value="mmap"/>
     </node>
     <node pkg= "tensorflow_object_detector" name="vdetect_ros" type="vdetect_ros.py"  />
     <node pkg= "tensorflow_object_detector" name="lane_detect_ros" type="lane_detect.py" />
