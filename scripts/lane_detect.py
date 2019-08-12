@@ -47,18 +47,6 @@ class ImageProcess:
         return (px, py)
 
     def image_proc(self, data):
-        # C_PATH = '/home/aj/Curved-Lane-Lines/calibrationdata_logitech/head_camera.yaml'  # yaml file created by ros node
-        # with open(C_PATH, 'r') as stream:
-        #     data = yaml.safe_load(stream)
-        #     mtx = data['camera_matrix']
-        #     dist = data['distortion_coefficients']
-        #     (rows, cols, data) = (mtx['rows'], mtx['cols'], mtx['data'])
-        #     mtx = np.array(data, dtype=float).reshape(rows, cols)
-        #     (rows, cols, data) = (dist['rows'], dist['cols'], dist['data'])
-        #     dist = np.array(data, dtype=float).reshape(rows, cols)
-        #     newcameramtx, roi = cv2.getOptimalNewCameraMatrix(mtx, dist, (640, 480), 1, (640, 480))
-        # mono = monocular.Monocular(newcameramtx.T,1.2,3.2,0,0,np.array([0.0, -0.02], dtype=np.float))
-        # t0 = time.time()
         try:
             cv_img = self.Bridge.compressed_imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
