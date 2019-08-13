@@ -79,7 +79,7 @@ config = tf.ConfigProto()
 class Detector:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("debug_image",Image, queue_size=1)
+        self.image_pub = rospy.Publisher("debug_image",CompressedImage, queue_size=1)
         self.map_pub = rospy.Publisher("world_lane",Image, queue_size=1)
         self.object_pub = rospy.Publisher("objects", Detection2DArray, queue_size=1)
         self.loc_pub = rospy.Publisher("vehicle_loc",Lanepoints, queue_size=1)
@@ -232,7 +232,7 @@ class Detector:
         ##############################################
         image_out = Image()
         try:
-            image_out = self.bridge.cv2_to_imgmsg(image,"bgr8")
+            image_out = self.bridge.cv2_to_compressed_imgmsg(image,"bgr8")
          #   map_out = self.bridge.cv2_to_imgmsg(plot,"bgr8")
         except CvBridgeError as e:
             print(e)
