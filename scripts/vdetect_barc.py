@@ -79,7 +79,7 @@ config = tf.ConfigProto()
 class Detector:
 
     def __init__(self):
-        self.image_pub = rospy.Publisher("debug_image",CompressedImage, queue_size=1)
+        self.image_pub = rospy.Publisher("debug_image",Image, queue_size=1)
         self.map_pub = rospy.Publisher("world_lane",Image, queue_size=1)
         self.object_pub = rospy.Publisher("objects", Detection2DArray, queue_size=1)
         self.loc_pub = rospy.Publisher("vehicle_loc",Lanepoints, queue_size=1)
@@ -232,15 +232,15 @@ class Detector:
         ##############################################
         image_out = Image()
         try:
-            image_out = self.bridge.cv2_to_compressed_imgmsg(image,"bgr8")
+            image_out = self.bridge.cv2_to_imgmsg(image,"bgr8")
          #   map_out = self.bridge.cv2_to_imgmsg(plot,"bgr8")
         except CvBridgeError as e:
             print(e)
         image_out.header = data.header
         self.image_pub.publish(image_out)
         # self.map_pub.publish(map_out)
-        cv2.imshow("output_image",cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-        cv2.waitKey(3)
+        # cv2.imshow("output_image",cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        # cv2.waitKey(3)
 
     def filter_boxes(self, min_score, boxes, scores, classes, categories):
         """Return boxes with a confidence >= `min_score`"""
