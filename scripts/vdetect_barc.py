@@ -31,7 +31,7 @@ except ImportError:
 from object_detection.utils import label_map_util
 from object_detection.utils import visualization_utils as vis_util
 # SET FRACTION OF GPU YOU WANT TO USE HERE
-GPU_FRACTION = 0.7
+GPU_FRACTION = 0.4
 
 ######### Set model here ############
 MODEL_NAME = 'faster_rcnn_resnet101_kitti_2018_01_28'
