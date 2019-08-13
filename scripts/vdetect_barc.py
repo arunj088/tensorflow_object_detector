@@ -46,7 +46,7 @@ LABEL_NAME = 'labelmap.pbtxt'
 # By default label maps are stored in data/labels/
 PATH_TO_LABELS = os.path.join(os.path.dirname(sys.path[0]),'data','labels', LABEL_NAME)
 ######### Set the number of classes here #########
-NUM_CLASSES = 90  # 90||2
+NUM_CLASSES = 2  # 90||2
 
 detection_graph = tf.Graph()
 with detection_graph.as_default():
@@ -67,7 +67,7 @@ category_index = label_map_util.create_category_index(categories)
 # Setting the GPU options to use fraction of gpu that has been set
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
-# config.gpu_options.per_process_gpu_memory_fraction = GPU_FRACTION
+config.gpu_options.per_process_gpu_memory_fraction = GPU_FRACTION
 
 
 # lane detection #######################################################################################################
