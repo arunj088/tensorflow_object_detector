@@ -102,7 +102,7 @@ class Detector:
         # intrinsic matrix is transposed as monocular class expects a transposed matrix
         # monocular class can be modified to make the matrix transposed
         self.m = mono.Monocular(self.cam_mtx.T,
-                                0.0762, 2.0, 0.0, 0.0, np.array([0.0, 0.0])) # (0.0762, 2.0) is height,pitch for barc real time
+                                0.0762, 0.5, 0.0, 0.0, np.array([0.0, 0.0])) # (0.0762, 2.0) is height,pitch for barc real time
 
 
 
