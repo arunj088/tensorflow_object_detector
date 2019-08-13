@@ -66,6 +66,7 @@ category_index = label_map_util.create_category_index(categories)
 
 # Setting the GPU options to use fraction of gpu that has been set
 config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
 # config.gpu_options.per_process_gpu_memory_fraction = GPU_FRACTION
 
 
