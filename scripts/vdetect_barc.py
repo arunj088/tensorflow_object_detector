@@ -205,10 +205,10 @@ class Detector:
             msg.cols = image_loc.shape[1]
             msg.loc = xy_range.reshape((-1))
             #############################################
-        else:
-            msg.rows = 1
-            msg.cols = 2
-            msg.loc = [-1,-1]
+        # else:
+        #     msg.rows = 1
+        #     msg.cols = 2
+        #     msg.loc = [-1,-1]
         self.loc_pub.publish(msg)
         self.object_pub.publish(objArray)
 
