@@ -13,7 +13,7 @@ import cv2
 import rospy
 import rosparam
 from barc.msg import Lanepoints
-
+from std_msgs.msg import Int32
 from sensor_msgs.msg import CompressedImage, Image
 from cv_bridge import CvBridgeError, CvBridge
 
@@ -23,6 +23,7 @@ class ImageProcess:
         rospy.Subscriber('/barc_cam/image_raw/compressed', CompressedImage, self.image_proc, queue_size=1, buff_size=2**24)
         self.pub = rospy.Publisher('/proc_image', Image, queue_size=1)
         self.lane_pub = rospy.Publisher('/lane_loc',Lanepoints, queue_size=1)
+        self.offset_pub = rospy.Publisher('lane_offset', Int32, queue_size=1)
         self.Bridge = CvBridge()
         # camera parameters
         # rosparam.load_file('/home/aj/Desktop/barc_calibrationdata/ost.yaml')
@@ -70,8 +71,8 @@ class ImageProcess:
         # cv2.imshow('canny',canny)
         # cv2.waitKey(0)
         # l_channel[()]
-        # gray[:horizon[1]+30,:] = 0
-        # gray[(gray <= 30)] = 0
+        gray[:horizon[1]+30,:] = 0
+        gray[(gray <= 200)] = 0
         # l_channel = gray*l_channel
         s_channel[(s_channel <= 45)] = 0
         s_channel[:s_channel.shape[0]//2,:] = 3
@@ -82,16 +83,16 @@ class ImageProcess:
         # canny[:canny.shape[0]//2,:] = 0
 
 
-        # cv2.imshow('s_channel',l_channel)
+        # cv2.imshow('s_channel',gray)
         # cv2.waitKey(0)
         # h_channel[(h_channel != 0)] = 1
         height, width = cv_img.shape[0], cv_img.shape[1]
         # gray
         s_binary = np.zeros_like(gray)
-        s_binary[(s_channel == 0)] = 1  # filter the region of interest from the image
-        s_binary_3 = np.dstack((s_binary,s_binary,s_binary))
-        test = cv_img*s_binary_3
-        # test = gray*s_binary
+        s_binary[(s_channel != 0)] = 1  # filter the region of interest from the image
+        # s_binary_3 = np.dstack((s_binary,s_binary,s_binary))
+        # test = cv_img*s_binary_3
+        test = gray*s_binary
         test1d = np.multiply(gray, s_binary)
         new_binary = np.zeros_like(test)
         new_binary[(test > 182)] = 255
@@ -109,18 +110,18 @@ class ImageProcess:
         #                   (x1, height), (x2, height)])
 
         # warping
-        src = np.float32([(164, 317), (491,317),
-                          (0, 400), (639,400)])
-        dst = np.float32([(164, 317), (491,317),
-                          (164, 400), (491,400)])
+        src = np.float32([(180, 297), (450,297),
+                          (13, 350), (634,350)])
+        dst = np.float32([(180, 297), (450,297),
+                          (180, 350), (450,350)])
         mat = cv2.getPerspectiveTransform(src, dst)
         inv_mat = cv2.getPerspectiveTransform(dst,src)
         limit = self.h_transform(horizon[0],horizon[1],mat)
         warped_img = cv2.warpPerspective(cv_img,mat, (cv_img.shape[1], cv_img.shape[0]))
         warped_mask = cv2.warpPerspective(new_binary ,mat, (cv_img.shape[1], cv_img.shape[0]))
         # warped_canny = cv2.warpPerspective(canny ,mat, (cv_img.shape[1], cv_img.shape[0]))
-        hist = np.sum(warped_mask[:,:,1][:warped_mask.shape[0],],axis=0)
-        # cv2.imshow('warped_mask', warped_mask)
+        hist = np.sum(warped_mask[:,:][:warped_mask.shape[0],],axis=0)
+        # cv2.imshow('warped_mask', warped_img)
         # cv2.waitKey(0)
         # plt.plot(hist)
         # plt.show()
@@ -133,7 +134,7 @@ class ImageProcess:
         nwindows = 9
         margin = 40
         minpix = 1
-        draw_windows=True
+        draw_windows=False
         left_fit_ = np.empty(3)
         right_fit_ = np.empty(3)
         windows_height = np.int(warped_mask.shape[0]/nwindows)
@@ -251,9 +252,10 @@ class ImageProcess:
             cv2.arrowedLine(inv_p_wrap, (width//2, 230), (width//2, 180), (255, 0, 0), 2, 8, 0, 0.5)
         image_out = self.Bridge.cv2_to_imgmsg(inv_p_wrap,"bgr8")
         self.pub.publish(image_out)
+        self.offset_pub.publish(offset)
         # To Display Image
-        cv2.imshow('new_img', inv_p_wrap)
-        cv2.waitKey(3)
+        # cv2.imshow('new_img', inv_p_wrap)
+        # cv2.waitKey(3)
         ### world cordinate calculation ###
 
         image_lane_loc = []
@@ -273,7 +275,7 @@ class ImageProcess:
         # plt.plot(image_lane_loc[:,0], 480-image_lane_loc[:,1], image_lane_loc[:,2],480-image_lane_loc[:,3])
         # plt.show()
         # plt.plot(image_pts[:,1], image_pts[:,0], image_pts[:,3], image_pts[:,2])
-        # plt.xlim((5,-5))
+        # plt.xlim((1,-1))
         # plt.show()
         ros_msg = image_pts.reshape(-1)
         msg = Lanepoints()
