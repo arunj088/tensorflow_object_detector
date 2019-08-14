@@ -36,7 +36,7 @@ class ImageProcess:
                                           rosparam.get_param('distortion_coefficients/cols'))
         self.dst_mtx = np.array(np.array(self.dst_mtx).reshape(self.dst_rows, self.dst_cols))
         # ~camera paramters
-        self.mono = monocular.Monocular(self.cam_mtx.T, 0.0762, 2.0, 0.0, 0.0, np.array([0.0, 0.0]))
+        self.mono = monocular.Monocular(self.cam_mtx.T, 0.0762, -1.0, 0.0, 0.0, np.array([0.0, 0.0]))
 
     def h_transform(self,u,v,H):
         tx = (H[0,0]*u + H[0,1]*v + H[0,2])
