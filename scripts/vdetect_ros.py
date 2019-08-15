@@ -204,10 +204,10 @@ class Detector:
             msg.cols = image_loc.shape[1]
             msg.loc = xy_range.reshape((-1))
             #############################################
-        else:
-            msg.rows = 1
-            msg.cols = 2
-            msg.loc = [-1,-1]
+        # else:
+        #     msg.rows = 1
+        #     msg.cols = 2
+        #     msg.loc = [-1,-1]
         self.loc_pub.publish(msg)
         self.object_pub.publish(objArray)
 
@@ -239,8 +239,8 @@ class Detector:
         image_out.header = data.header
         self.image_pub.publish(image_out)
         # self.map_pub.publish(map_out)
-        cv2.imshow("output_image",cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
-        cv2.waitKey(3)
+        # cv2.imshow("output_image",cv2.cvtColor(image, cv2.COLOR_RGB2BGR))
+        # cv2.waitKey(3)
 
     def filter_boxes(self, min_score, boxes, scores, classes, categories):
         """Return boxes with a confidence >= `min_score`"""

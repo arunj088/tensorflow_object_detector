@@ -250,8 +250,8 @@ class ImageProcess:
         image_out = self.Bridge.cv2_to_imgmsg(inv_p_wrap,"bgr8")
         self.pub.publish(image_out)
         # To Display Image
-        cv2.imshow('new_img', inv_p_wrap)
-        cv2.waitKey(3)
+        # cv2.imshow('new_img', inv_p_wrap)
+        # cv2.waitKey(3)
         ### world cordinate calculation ###
 
         image_lane_loc = []
